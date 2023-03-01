@@ -1,39 +1,74 @@
-import Image from "next/image";
-import { Inter } from "next/font/google";
-import styles from "./page.module.css";
 import { User } from "@prisma/client";
 import { PrismaClient } from ".prisma/client";
-
-const inter = Inter({ subsets: ["latin"] });
+import {
+  Table,
+  TableContainer,
+  Thead,
+  Tr,
+  Th,
+  Tbody,
+  Td,
+  Text,
+} from "./common/components";
+// const inter = Inter({ subsets: ["latin"] });
 
 export default async function Home() {
-  const user = await extractUser();
   return (
     <div>
-      <table>
-        <thead>
-          <tr>
-            <th>id</th>
-            <th>name</th>
-            <th>email</th>
-          </tr>
-        </thead>
-        {user.map((user: User) => {
-          return (
-            <tr key={user.id}>
-              <td key={user.id}>{user.id}</td>
-              <td key={user.id}>{user.name}</td>
-              <td key={user.email}>{user.email}</td>
-            </tr>
-          );
-        })}
-      </table>
+      <Text fontSize="4xl">Users</Text>
+      <UserTable />
     </div>
   );
 }
 
+const UserTable = async () => {
+  const user = await extractUser();
+  console.log(user);
+  return (
+    <TableContainer>
+      <Table>
+        <Thead>
+          <Tr>
+            <Th>ID</Th>
+            <Th>NAME</Th>
+            <Th>EMAIL</Th>
+            <Th>VIMRC</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {user.map((u: User) => {
+            return (
+              <Tr key={u.id}>
+                <Td>{u.id}</Td>
+                <Td>{u.name}</Td>
+                <Td>{u.email}</Td>
+                <Td>{u.vimrc.id}</Td>
+              </Tr>
+            );
+          })}
+          <Tr></Tr>
+        </Tbody>
+      </Table>
+    </TableContainer>
+  );
+};
+
+const extractVimrc = async (userId: number) => {
+  const prisma = new PrismaClient();
+  const vimrcs = await prisma.vimrc.findFirst({
+    where: {
+      userId: userId,
+    },
+  });
+  return vimrcs;
+};
+
 const extractUser = async () => {
   const prisma = new PrismaClient();
-  const users = await prisma.user.findMany();
+  const users = await prisma.user.findMany({
+    include: {
+      vimrc: true,
+    },
+  });
   return users;
 };
